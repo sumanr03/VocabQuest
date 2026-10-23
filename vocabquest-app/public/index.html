@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>VocabQuest</title>
+<meta name="description" content="A ten-minute daily vocabulary quest for children.">
+<meta name="theme-color" content="#eef5f0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f171d" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="VocabQuest">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap">
+<style>
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{-webkit-text-size-adjust:100%}
+body{margin:0}
+[hidden]{display:none!important}
+img{max-width:100%}
+button{-webkit-tap-highlight-color:transparent}
+/* Layout: one centred column, sticky header with tabs; quest takes over the column as a step-by-step journey */
+:root{
+  --bg:#eef5f0; --surface:#ffffff; --sunk:#e3ede7; --ink:#1b2a38; --muted:#566977; --line:#d2dfd8;
+  --accent:#2a64d6; --accent-ink:#ffffff; --accent-soft:#dde7fb;
+  --gold:#f2ac00; --gold-soft:#fff1c7; --gold-ink:#5a3f00;
+  --good:#18925c; --good-soft:#d9f3e6; --bad:#cf3f3f; --bad-soft:#fbe1e1;
+  --display:"Fredoka","Trebuchet MS","Segoe UI",sans-serif;
+  --body:"Nunito","Segoe UI",system-ui,sans-serif;
+  --r:16px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f171d; --surface:#17222b; --sunk:#1d2a34; --ink:#e7eff2; --muted:#9db0bc; --line:#2a3a46;
+  --accent:#6d9cff; --accent-ink:#0b1424; --accent-soft:#1f3150;
+  --gold:#ffc83a; --gold-soft:#3a2f12; --gold-ink:#ffe39a;
+  --good:#3fcf8c; --good-soft:#163828; --bad:#ff7a7a; --bad-soft:#3d1d1f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f171d; --surface:#17222b; --sunk:#1d2a34; --ink:#e7eff2; --muted:#9db0bc; --line:#2a3a46;
+  --accent:#6d9cff; --accent-ink:#0b1424; --accent-soft:#1f3150;
+  --gold:#ffc83a; --gold-soft:#3a2f12; --gold-ink:#ffe39a;
+  --good:#3fcf8c; --good-soft:#163828; --bad:#ff7a7a; --bad-soft:#3d1d1f; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 40px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.app{max-width:760px;margin:0 auto}
+h1,h2,h3{font-family:var(--display);font-weight:600;line-height:1.15;text-wrap:balance;margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,.opt:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:14px 10px;display:flex;flex-direction:column;gap:10px}
+.toprow{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:700;font-size:1.45rem;letter-spacing:.2px}
+.brand .mark{width:36px;height:36px;border-radius:11px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-size:1.05rem;transform:rotate(-6deg)}
+.brand b{color:var(--accent);font-weight:700}
+.chips{display:flex;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-weight:800;font-variant-numeric:tabular-nums;font-size:.92rem}
+.chip.fire svg{color:#f06a1d}.chip.pts svg{color:var(--gold)}
+.tabs{display:flex;gap:4px;background:var(--sunk);padding:4px;border-radius:14px}
+.tabs button{flex:1;border:0;background:transparent;padding:8px 6px;border-radius:10px;font-weight:700;color:var(--muted);font-size:.95rem}
+.tabs button[aria-current="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+main{display:flex;flex-direction:column;gap:18px;padding-top:8px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px}
+.muted{color:var(--muted)}
+.small{font-size:.88rem}
+.btn{border:0;border-radius:14px;padding:12px 20px;font-weight:800;font-size:1rem;background:var(--sunk);color:var(--ink)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);box-shadow:0 4px 0 color-mix(in srgb,var(--accent) 60%,#000)}
+.btn.primary:active{transform:translateY(2px);box-shadow:0 2px 0 color-mix(in srgb,var(--accent) 60%,#000)}
+.btn.big{font-size:1.15rem;padding:15px 28px;font-family:var(--display);font-weight:600;letter-spacing:.3px}
+.btn.ghost{background:transparent;border:1px solid var(--line)}
+.btn.danger{background:var(--bad);color:#fff}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.notice{background:var(--gold-soft);color:var(--gold-ink);border-radius:12px;padding:10px 14px;font-size:.9rem;font-weight:600}
+
+/* Home */
+.hello h1{font-size:clamp(1.6rem,5vw,2.1rem)}
+.hello p{margin:4px 0 0}
+.quest{background:var(--accent);color:var(--accent-ink);border:0;position:relative;overflow:hidden;display:flex;flex-direction:column;gap:16px}
+.quest::after{content:"";position:absolute;right:-50px;top:-50px;width:190px;height:190px;border-radius:50%;border:26px solid color-mix(in srgb,var(--accent-ink) 14%,transparent)}
+.quest .eyebrow{text-transform:uppercase;letter-spacing:1.4px;font-size:.78rem;font-weight:800;opacity:.85}
+.quest h2{font-size:1.7rem}
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;position:relative;z-index:1}
+.steps li{background:color-mix(in srgb,var(--accent-ink) 14%,transparent);border-radius:12px;padding:10px 12px;font-weight:700;font-size:.92rem;line-height:1.3}
+.steps li span{display:block;font-family:var(--display);font-size:1.5rem;font-weight:600}
+.quest .btn.primary{background:var(--gold);color:#3a2900;box-shadow:0 4px 0 #b37f00;align-self:flex-start;position:relative;z-index:1}
+.wordchips{display:flex;flex-wrap:wrap;gap:8px}
+.wchip{padding:6px 12px;border-radius:999px;background:var(--sunk);font-weight:700}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;min-width:0}
+.stat b{display:block;font-family:var(--display);font-size:1.6rem;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.1}
+.stat span{font-size:.82rem;color:var(--muted);font-weight:700}
+
+/* Quest */
+.track{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.track div{font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--muted)}
+.track i{display:block;height:8px;border-radius:99px;background:var(--sunk);margin-top:5px;overflow:hidden}
+.track i em{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .3s}
+.track .off{opacity:.45}
+.learn{display:flex;flex-direction:column;gap:14px}
+.wordline{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.bigword{font-family:var(--display);font-size:clamp(2.2rem,9vw,3.2rem);font-weight:600;color:var(--accent);line-height:1}
+.pos{font-style:italic;color:var(--muted);font-weight:600}
+.lvtag{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;padding:3px 9px;border-radius:999px;background:var(--sunk);color:var(--muted)}
+.lvtag.lv2{background:var(--accent-soft);color:var(--accent)}
+.lvtag.lv3{background:var(--bad-soft);color:var(--bad)}
+.entry .lvtag{flex:none}
+.levelpick{display:flex;gap:6px;flex-wrap:wrap}
+.levelpick button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 14px;font-weight:700;font-size:.9rem}
+.levelpick button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.speak{border:1px solid var(--line);background:var(--sunk);border-radius:999px;width:42px;height:42px;display:grid;place-items:center}
+.def{font-size:1.2rem;font-weight:700;margin:0}
+.ex{margin:0;padding:12px 14px;border-radius:12px;background:var(--sunk);font-size:1.05rem}
+.ex mark{background:var(--gold-soft);color:inherit;font-weight:800;padding:0 3px;border-radius:4px}
+.sa{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sa h3{font-family:var(--body);font-size:.78rem;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);font-weight:800;margin-bottom:6px}
+.tag{display:inline-block;padding:3px 10px;border-radius:999px;margin:0 6px 6px 0;font-weight:700;font-size:.92rem}
+.tag.syn{background:var(--good-soft);color:var(--good)}
+.tag.ant{background:var(--bad-soft);color:var(--bad)}
+.qlabel{display:inline-block;padding:3px 10px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-weight:800;font-size:.78rem;text-transform:uppercase;letter-spacing:1px}
+.prompt{font-size:1.3rem;font-weight:700;margin:10px 0 16px;line-height:1.4}
+.prompt b{color:var(--accent)}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.opt{border:2px solid var(--line);background:var(--surface);border-radius:14px;padding:14px;font-weight:800;font-size:1.08rem;text-align:left;min-width:0}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt.right{border-color:var(--good);background:var(--good-soft);color:var(--good)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft);color:var(--bad)}
+.opt:disabled{cursor:default}
+.feedback{margin-top:16px;border-radius:14px;padding:14px 16px;display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.feedback.ok{background:var(--good-soft)}.feedback.no{background:var(--bad-soft)}
+.feedback strong{font-family:var(--display);font-size:1.25rem;font-weight:600}
+.feedback.ok strong{color:var(--good)}.feedback.no strong{color:var(--bad)}
+.feedback p{margin:2px 0 0}
+.done{text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px;padding-block:30px}
+.burst{width:110px;height:110px}
+.done h2{font-size:2rem}
+.done .stats{width:100%;grid-template-columns:repeat(3,1fr)}
+.newbadge{display:flex;gap:10px;align-items:center;background:var(--gold-soft);color:var(--gold-ink);border-radius:14px;padding:10px 14px;font-weight:800;text-align:left}
+@keyframes pop{0%{transform:scale(.6);opacity:.3}70%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+.pop{animation:pop .5s ease-out}
+
+/* Library */
+.search{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font:inherit;color:var(--ink)}
+.filters{display:flex;gap:6px;flex-wrap:wrap}
+.filters button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 14px;font-weight:700;font-size:.9rem}
+.filters button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.lib{display:flex;flex-direction:column;gap:8px}
+.entry{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.entry>button{width:100%;border:0;background:transparent;display:flex;align-items:center;gap:12px;padding:12px 16px;text-align:left}
+.entry .ew{font-family:var(--display);font-size:1.25rem;font-weight:600;min-width:7.5em}
+.entry .ed{flex:1;min-width:0;color:var(--muted);font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.status{font-size:.75rem;font-weight:800;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.st-new{background:var(--sunk);color:var(--muted)}
+.st-learning{background:var(--accent-soft);color:var(--accent)}
+.st-learned{background:var(--good-soft);color:var(--good)}
+.st-mastered{background:var(--gold-soft);color:var(--gold-ink)}
+.st-tricky{background:var(--bad-soft);color:var(--bad)}
+.entry .more{padding:0 16px 16px;display:flex;flex-direction:column;gap:12px}
+.boxes{display:flex;gap:4px;align-items:center}
+.boxes i{width:18px;height:8px;border-radius:3px;background:var(--sunk)}
+.boxes i.on{background:var(--good)}
+
+/* Progress */
+.level{display:flex;gap:18px;align-items:center}
+.level .ring{flex:none}
+.level h2{font-size:1.5rem}
+.bar{height:12px;border-radius:99px;background:var(--sunk);overflow:hidden;margin-top:8px}
+.bar em{display:block;height:100%;background:var(--gold);border-radius:99px}
+.badges{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.badge{text-align:center;padding:12px 8px;border-radius:14px;background:var(--surface);border:1px solid var(--line);min-width:0}
+.badge.locked{opacity:.55}
+.badge b{display:block;font-size:.9rem;margin-top:6px;line-height:1.2}
+.badge span{display:block;font-size:.76rem;color:var(--muted);line-height:1.3;margin-top:2px}
+.sectionhead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.sectionhead h2{font-size:1.3rem}
+.list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.list li{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--line);font-weight:700}
+.list li:first-child{border-top:0}
+.list li span{color:var(--muted);font-weight:600;font-size:.9rem;font-variant-numeric:tabular-nums;text-align:right}
+
+/* Parent */
+.summary{font-size:1.08rem;margin:0}
+.chart{width:100%;height:auto;display:block}
+.chart text{font-family:var(--body);font-size:13px;fill:var(--muted);font-weight:700}
+.chart .val{fill:var(--ink)}
+.chart .b{fill:var(--accent)}.chart .b.soft{fill:var(--accent-soft)}
+.chart .grid{stroke:var(--line);stroke-width:1}
+.field{display:flex;flex-direction:column;gap:6px;font-weight:700}
+.field input{padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);font:inherit;color:var(--ink);max-width:280px}
+.confirm{background:var(--bad-soft);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+
+@media (max-width:560px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .done .stats{grid-template-columns:repeat(3,1fr)}
+  .badges{grid-template-columns:repeat(2,1fr)}
+  .opts{grid-template-columns:1fr}
+  .sa{grid-template-columns:1fr}
+  .steps li{font-size:.82rem;padding:8px}
+  .entry .ed{display:none}
+  .entry .ew{flex:1}
+  .tabs button{font-size:.85rem;padding:8px 2px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+<script src="words.js"></script>
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="account.js"></script>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="toprow">
+      <div class="brand"><span class="mark">Vq</span><span>Vocab<b>Quest</b></span></div>
+      <div class="chips" id="chips"></div>
+    </div>
+    <nav class="tabs" id="tabs" aria-label="Sections">
+      <button data-act="tab" data-v="home">Today</button>
+      <button data-act="tab" data-v="library">Words</button>
+      <button data-act="tab" data-v="progress">Progress</button>
+      <button data-act="tab" data-v="parent">Parents</button>
+    </nav>
+  </header>
+  <main id="main"></main>
+</div>
+
+<script>
+const BASE=window.VQ_WORDS||[];
+let W=BASE.slice(),BYW={};
+function rebuildWords(){const seen=new Set();W=[...BASE,...((typeof state!=="undefined"&&state&&state.extra)||[])].filter(x=>!seen.has(x.w)&&seen.add(x.w));BYW=Object.fromEntries(W.map(x=>[x.w,x]))}
+const QN=20; /* new words per daily quest */
+const LVL={1:"Core",2:"Intermediate",3:"Difficult"};
+const lvOf=x=>(x&&x.lv)||1;
+const INT=[1,1,3,7,14,30];
+const LEVELS=[[0,"Word Explorer"],[100,"Path Finder"],[250,"Word Ranger"],[450,"Story Scout"],[700,"Lexicon Knight"],[1000,"Word Wizard"],[1400,"Grand Wordsmith"]];
+const BADGES=[
+ {id:"first",g:"1",name:"First Quest",desc:"Finish a daily quest"},
+ {id:"streak3",g:"3",name:"On a Roll",desc:"3 days in a row"},
+ {id:"streak7",g:"7",name:"Week Warrior",desc:"7 days in a row"},
+ {id:"perfect",g:"✓",name:"Perfect Quiz",desc:"Every answer right in a quest"},
+ {id:"words10",g:"10",name:"Word Collector",desc:"Learn 10 words"},
+ {id:"words25",g:"25",name:"Word Hoarder",desc:"Learn 25 words"},
+ {id:"revise10",g:"↻",name:"Revision Hero",desc:"10 revision answers right"},
+ {id:"pts500",g:"★",name:"Point Hunter",desc:"Earn 500 points"}
+];
+const ICON={
+ fire:'<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path fill="currentColor" d="M12 2c.6 3.6 5.5 5.8 5.5 11.2A5.5 5.5 0 0 1 6.5 13.2c0-2.9 1.6-4.4 2.4-6.4 1.4 1.3 2.1 2.8 2.2 4.6C12.6 9.3 12.9 5.6 12 2z"/></svg>',
+ star:'<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path fill="currentColor" d="M12 2.5l2.9 6.1 6.6.8-4.9 4.5 1.3 6.6L12 17.2l-5.9 3.3 1.3-6.6-4.9-4.5 6.6-.8z"/></svg>',
+ speak:'<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>'
+};
+const KEY="vocabquest-v1";
+const hasSpeech=(()=>{try{return "speechSynthesis" in window}catch(e){return false}})();
+
+/* ---------- dates ---------- */
+const fmt=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const today=()=>fmt(new Date());
+const addDays=(s,n)=>{const[y,m,d]=s.split("-").map(Number);return fmt(new Date(y,m-1,d+n))};
+const dayName=s=>{const[y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d).toLocaleDateString("en-GB",{weekday:"short"})};
+
+/* ---------- state ---------- */
+let state, view="home", run=null, libQ="", libF="all", libOpen=null, confirmReset=false, libShow=60;
+function blank(){return{level:"mixed",extra:[],name:"Explorer",demo:false,points:0,streak:0,bestStreak:0,lastQuest:null,questsDone:0,perfects:0,revRight:0,words:{},days:{},badges:{},quest:null}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+function load(){try{const s=localStorage.getItem(KEY);if(s)return JSON.parse(s)}catch(e){}return null}
+const dayRec=d=>state.days[d]||(state.days[d]={q:0,c:0,neu:0,rev:0,quest:false});
+
+function record(w,ok,date,rev){
+  const s=state.words[w]||(state.words[w]={box:0,due:date,right:0,wrong:0,first:date,last:null});
+  if(ok){if(s.last!==date)s.box=Math.min(s.box+1,5);s.right++;s.due=addDays(date,INT[s.box])}
+  else{s.wrong++;s.box=0;s.due=addDays(date,1)}
+  s.last=date;
+  const d=dayRec(date);d.q++;if(ok)d.c++;
+  if(rev){d.rev++;if(ok)state.revRight++}
+  state.points+=ok?10:2;
+}
+function dueWords(date,exclude){
+  return Object.entries(state.words).filter(([w,s])=>s.due<=date&&!exclude.includes(w))
+    .sort((a,b)=>a[1].box-b[1].box||a[1].due.localeCompare(b[1].due)).slice(0,10).map(e=>e[0]);
+}
+const countLearned=()=>Object.values(state.words).filter(s=>s.box>=2).length;
+const curStreak=()=>{const T=today();return(state.lastQuest===T||state.lastQuest===addDays(T,-1))?state.streak:0};
+function finishQuest(date,perfect){
+  if(state.lastQuest===addDays(date,-1))state.streak++;else if(state.lastQuest!==date)state.streak=1;
+  state.lastQuest=date;state.bestStreak=Math.max(state.bestStreak,state.streak);
+  state.questsDone++;dayRec(date).quest=true;
+  state.points+=20;if(perfect){state.points+=20;state.perfects++}
+  return checkBadges(date);
+}
+function checkBadges(date){
+  const L=countLearned();
+  const c={first:state.questsDone>=1,streak3:state.bestStreak>=3,streak7:state.bestStreak>=7,perfect:state.perfects>=1,words10:L>=10,words25:L>=25,revise10:state.revRight>=10,pts500:state.points>=500};
+  const out=[];BADGES.forEach(b=>{if(c[b.id]&&!state.badges[b.id]){state.badges[b.id]=date||today();out.push(b)}});return out;
+}
+function pickNew(){
+  const un=W.filter(x=>!state.words[x.w]),by=l=>un.filter(x=>lvOf(x)===l),out=[];
+  const a=Math.round(QN*.5),b=Math.round(QN*.3);
+  const mix=state.level==="mixed"?[[1,a],[2,b],[3,QN-a-b]]:[[Number(state.level)||1,QN]];
+  mix.forEach(([l,n])=>out.push(...by(l).slice(0,n)));
+  if(out.length<QN)out.push(...un.filter(x=>!out.includes(x)).slice(0,QN-out.length));
+  return out.map(x=>x.w);
+}
+function ensureQuest(){
+  const T=today();
+  if(!state.quest||state.quest.date!==T){
+    state.quest={date:T,words:pickNew(),done:false,started:false};save();
+  }
+}
+function seed(){
+  state=blank();state.demo=true;state.name="Ava";
+  const T=today(),miss=new Set(["fragile","timid","meticulous","frugal","vague","hasty","dwindle"]);
+  for(let k=0;k<2;k++){
+    const date=addDays(T,k-2),nw=W.slice(k*QN,k*QN+QN).map(x=>x.w);
+    const rv=dueWords(date,nw);
+    nw.forEach(w=>record(w,!miss.has(w),date,false));dayRec(date).neu+=nw.length;
+    rv.forEach(w=>record(w,!(w==="meticulous"),date,true));
+    finishQuest(date,nw.every(w=>!miss.has(w))&&!rv.includes("meticulous"));
+  }
+}
+state=load();if(!state){state=blank()}else{state.extra=state.extra||[];state.level=state.level||"mixed"}
+rebuildWords();ensureQuest();
+if(!state.quest.started&&!state.quest.done){state.quest.words=pickNew();save()}
+
+/* ---------- quiz building ---------- */
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const others=(w,n)=>shuffle(W.filter(x=>x.w!==w).map(x=>x.w)).slice(0,n);
+function related(list){const out=new Set(list);W.forEach(o=>{if(o.s.some(v=>list.includes(v)))o.s.forEach(v=>out.add(v))});return out}
+function makeQ(w,k){
+  const x=BYW[w];let t=["def","blank","syn","ant"][k%4];if(t==="ant"&&x.a.length<2)t="def";
+  const synPool=W.filter(o=>o.w!==w).flatMap(o=>o.s);
+  if(t==="def")return{w,label:"Meaning",prompt:`Which word means “${x.d}”?`,ans:w,opts:shuffle([w,...others(w,3)])};
+  if(t==="blank")return{w,label:"Fill the gap",prompt:x.e.replace(new RegExp("\\b"+w+"\\b","i"),"_____"),ans:w,opts:shuffle([w,...others(w,3)])};
+  if(t==="syn"){const ans=pick(x.s),bad=related(x.s);x.a.forEach(v=>bad.add(v));const pool=shuffle([...new Set(synPool)].filter(v=>!bad.has(v)));const dis=x.a.slice(0,2);while(dis.length<3&&pool.length)dis.push(pool.shift());
+    return{w,label:"Synonym",prompt:`Which word is closest in meaning to <b>${w}</b>?`,ans,opts:shuffle([...new Set([ans,...dis])])}}
+  const ans=pick(x.a),bad=related(x.a);x.a.forEach(v=>bad.add(v));x.s.forEach(v=>bad.add(v));const one=shuffle(synPool.filter(v=>!bad.has(v)))[0];
+  return{w,label:"Opposite",prompt:`Which word means the opposite of <b>${w}</b>?`,ans,opts:shuffle([...new Set([ans,...x.s.slice(0,2),one])])};
+}
+
+/* ---------- helpers ---------- */
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function speak(w){try{const u=new SpeechSynthesisUtterance(w);u.lang="en-GB";u.rate=.85;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
+function levelInfo(p){let i=0;LEVELS.forEach((l,j)=>{if(p>=l[0])i=j});const cur=LEVELS[i],nx=LEVELS[i+1];
+  return{n:i+1,name:cur[1],next:nx,pct:nx?Math.round((p-cur[0])/(nx[0]-cur[0])*100):100,toGo:nx?nx[0]-p:0}}
+function status(w){const s=state.words[w];if(!s)return["new","New"];if(s.wrong>s.right)return["tricky","Tricky"];
+  if(s.box>=4)return["mastered","Mastered"];if(s.box>=2)return["learned","Learned"];return["learning","Learning"]}
+function totals(){let q=0,c=0;Object.values(state.days).forEach(d=>{q+=d.q;c+=d.c});return{q,c,acc:q?Math.round(c/q*100):0}}
+const medal=(b,on)=>`<svg viewBox="0 0 64 64" width="54" height="54" aria-hidden="true"><path d="M22 4h8l4 14h-8zM34 4h8l-4 14h-8z" fill="${on?"var(--accent)":"var(--line)"}"/><circle cx="32" cy="38" r="20" fill="${on?"var(--gold)":"var(--sunk)"}" stroke="${on?"#c98d00":"var(--line)"}" stroke-width="3"/><text x="32" y="45" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="${b.g.length>1?17:20}" fill="${on?"#4a3400":"var(--muted)"}">${b.g}</text></svg>`;
+function exHTML(x){return esc(x.e).replace(new RegExp("\\b("+x.w+")\\b","i"),"<mark>$1</mark>")}
+function wordDetail(x){return`
+  <div class="wordline"><span class="bigword">${x.w}</span><span class="pos">${x.p}</span><span class="lvtag lv${lvOf(x)}">${LVL[lvOf(x)]}</span>
+  ${hasSpeech?`<button class="speak" data-act="speak" data-w="${x.w}" aria-label="Hear ${x.w}">${ICON.speak}</button>`:""}</div>
+  <p class="def">${esc(x.d)}</p><p class="ex">${exHTML(x)}</p>
+  <div class="sa"><div><h3>Similar words</h3>${x.s.map(v=>`<span class="tag syn">${v}</span>`).join("")}</div>
+  ${x.a.length?`<div><h3>Opposites</h3>${x.a.map(v=>`<span class="tag ant">${v}</span>`).join("")}</div>`:""}</div>`}
+
+/* ---------- views ---------- */
+function renderChips(){
+  document.getElementById("chips").innerHTML=`<span class="chip fire" title="Daily streak">${ICON.fire}${curStreak()} day${curStreak()===1?"":"s"}</span><span class="chip pts" title="Points">${ICON.star}${state.points}</span>`;
+  document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-current",String(b.dataset.v===view||(view==="quest"&&b.dataset.v==="home"))));
+}
+function home(){
+  ensureQuest();
+  const q=state.quest,T=today(),rv=dueWords(T,q.words),lv=levelInfo(state.points),seen=Object.keys(state.words).length;
+  const hr=new Date().getHours(),greet=hr<12?"Good morning":hr<18?"Good afternoon":"Good evening";
+  let questCard;
+  if(!q.done){
+    questCard=`<section class="card quest"><div class="eyebrow">Today's quest · about 20 minutes</div>
+      <h2>${q.words.length?`Learn ${q.words.length} new words, then show what you know`:"Revise your words"}</h2>
+      <ol class="steps">${q.words.length?`<li><span>1</span>Meet ${q.words.length} new words</li><li><span>2</span>Take the quiz</li>`:""}${rv.length?`<li><span>${q.words.length?3:1}</span>Revise ${rv.length} word${rv.length===1?"":"s"}</li>`:""}</ol>
+      <button class="btn primary big" data-act="start" data-mode="daily">Start quest</button></section>`;
+  }else{
+    questCard=`<section class="card quest"><div class="eyebrow">Today's quest</div><h2>Quest complete. Brilliant work!</h2>
+      <p style="margin:0;position:relative;z-index:1">Your streak is safe. Come back tomorrow for ${QN} new words.</p>
+      ${seen?`<button class="btn primary" data-act="start" data-mode="bonus">Bonus practice</button>`:""}</section>`;
+  }
+  return`${state.demo?`<div class="notice">You're looking at example progress for Ava. Parents can start fresh from the Parents tab.</div>`:""}
+  <div class="hello"><h1>${greet}, ${esc(state.name)}!</h1><p class="muted">${q.done?"You've done today's quest.":"Your quest is ready. Tap the button to begin."}</p></div>
+  ${questCard}
+  ${gen==="working"?`<p class="notice" style="margin:0">Fetching fresh words for your next quests…</p>`:""}
+  ${!q.words.length&&!q.done?`<p class="muted small" style="margin:0">You've met every word in your library. Brilliant work! Keep revising to master every word.</p>`:""}
+  ${q.words.length&&!q.done?`<section class="card"><div class="sectionhead"><h2>Today's words</h2><span class="muted small">Can you guess any meanings?</span></div><div class="wordchips" style="margin-top:12px">${q.words.map(w=>`<span class="wchip">${w}</span>`).join("")}</div></section>`:""}
+  <div class="stats">
+    <div class="stat"><b>${curStreak()}</b><span>day streak</span></div>
+    <div class="stat"><b>${countLearned()}</b><span>words learned</span></div>
+    <div class="stat"><b>${totals().acc}%</b><span>quiz accuracy</span></div>
+    <div class="stat"><b>${lv.n}</b><span>${lv.name}</span></div>
+  </div>`;
+}
+function startRun(mode){
+  ensureQuest();const T=today();let nw=[],rv=[];
+  if(mode==="daily"){nw=state.quest.words.slice();rv=dueWords(T,nw)}
+  else{rv=dueWords(T,[]);if(!rv.length)rv=shuffle(Object.keys(state.words)).slice(0,5)}
+  run={mode,phase:nw.length?"learn":"review",i:0,nw,rv,qs:nw.map((w,i)=>makeQ(w,i)),rqs:rv.map((w,i)=>makeQ(w,i+1)),qi:0,ans:null,correct:0,total:0,start:state.points,newB:[]};
+  view="quest";render();window.scrollTo(0,0);
+}
+function track(){
+  const hasR=run.rv.length,hasL=run.nw.length;
+  const p=run.phase,learnP=p==="learn"?(run.i)/run.nw.length:1,quizP=p==="learn"?0:p==="quiz"?run.qi/run.qs.length:1,
+    revP=p==="review"?run.qi/run.rqs.length:p==="done"?1:0;
+  const seg=(n,v,off)=>`<div class="${off?"off":""}">${n}<i><em style="width:${Math.round(v*100)}%"></em></i></div>`;
+  return`<div class="track">${seg("Learn",learnP,!hasL)}${seg("Quiz",quizP,!hasL)}${seg("Revise",revP,!hasR)}</div>`;
+}
+function quest(){
+  if(run.phase==="learn"){
+    const x=BYW[run.nw[run.i]],last=run.i===run.nw.length-1;
+    return`${track()}<section class="card learn pop"><span class="qlabel">New word ${run.i+1} of ${run.nw.length}</span>${wordDetail(x)}
+      <div class="row">${run.i>0?`<button class="btn ghost" data-act="prev">Back</button>`:""}<button class="btn primary big" data-act="next">${last?"Start the quiz":"Next word"}</button></div></section>
+      <button class="btn ghost small" data-act="quit" style="align-self:flex-start">Leave quest</button>`;
+  }
+  if(run.phase==="quiz"||run.phase==="review"){
+    const list=run.phase==="quiz"?run.qs:run.rqs,q=list[run.qi],a=run.ans;
+    const head=run.phase==="quiz"?`Question ${run.qi+1} of ${list.length}`:`Revision ${run.qi+1} of ${list.length}`;
+    return`${track()}<section class="card ${a?"":"pop"}"><div class="row"><span class="qlabel">${q.label}</span><span class="muted small">${head}</span></div>
+      <p class="prompt">${q.prompt}</p>
+      <div class="opts">${q.opts.map(o=>{let c="";if(a){if(o===q.ans)c="right";else if(o===a.pick)c="wrong"}
+        return`<button class="opt ${c}" data-act="answer" data-o="${esc(o)}" ${a?"disabled":""}>${esc(o)}</button>`}).join("")}</div>
+      ${a?`<div class="feedback ${a.ok?"ok":"no"}"><div><strong>${a.ok?pick(["Nice one!","Spot on!","Brilliant!","You got it!"])+" +10":"Not quite. +2 for trying"}</strong>
+        <p><b>${q.w}</b> means ${esc(BYW[q.w].d)}.${a.ok?"":" This word will come back in your revision tomorrow."}</p></div>
+        <button class="btn primary" data-act="cont" id="contBtn">Next</button></div>`:""}
+    </section><button class="btn ghost small" data-act="quit" style="align-self:flex-start">Leave quest</button>`;
+  }
+  const earned=state.points-run.start,lv=levelInfo(state.points),daily=run.mode==="daily";
+  const perfect=run.correct===run.total&&run.total>0;
+  return`<section class="card done"><svg class="burst pop" viewBox="0 0 120 120" aria-hidden="true">
+    ${Array.from({length:12},(_,i)=>`<rect x="57" y="4" width="6" height="18" rx="3" fill="var(--gold)" transform="rotate(${i*30} 60 60)"/>`).join("")}
+    <circle cx="60" cy="60" r="32" fill="var(--accent)"/><path d="M60 40l6 12.5 13.7 1.7-10 9.4 2.6 13.6L60 70.5l-12.3 6.7 2.6-13.6-10-9.4 13.7-1.7z" fill="var(--gold)"/></svg>
+    <h2>${daily?"Quest complete!":"Practice complete!"}</h2>
+    <p class="muted" style="margin:0;max-width:34ch">${daily&&run.nw.length?`You met ${run.nw.length} new words today${perfect?" and got every answer right":""}. That's real progress.`:perfect?"Every answer right. Your memory is getting stronger.":"Every word you practise gets easier next time."}</p>
+    <div class="stats"><div class="stat"><b>${run.correct}/${run.total}</b><span>correct</span></div><div class="stat"><b>+${earned}</b><span>points</span></div><div class="stat"><b>${curStreak()}</b><span>day streak</span></div></div>
+    ${run.newB.map(b=>`<div class="newbadge">${medal(b,true)}<div>New badge: ${b.name}<div class="small" style="font-weight:600">${b.desc}</div></div></div>`).join("")}
+    <div style="width:100%;max-width:360px;text-align:left"><div class="row" style="justify-content:space-between"><b>Level ${lv.n} · ${lv.name}</b><span class="muted small">${lv.next?lv.toGo+" pts to go":"Top level!"}</span></div><div class="bar"><em style="width:${lv.pct}%"></em></div></div>
+    <div class="row" style="justify-content:center"><button class="btn primary big" data-act="tab" data-v="home">Back to home</button><button class="btn ghost" data-act="tab" data-v="library">See my words</button></div>
+  </section>`;
+}
+function advance(){
+  run.ans=null;run.qi++;
+  if(run.phase==="quiz"&&run.qi>=run.qs.length){run.qi=0;run.phase=run.rqs.length?"review":"done"}
+  else if(run.phase==="review"&&run.qi>=run.rqs.length){run.phase="done"}
+  if(run.phase==="done"){
+    if(run.mode==="daily"&&!state.quest.done){state.quest.done=true;run.newB=finishQuest(today(),run.correct===run.total)}
+    else run.newB=checkBadges();
+    save();topUp();
+  }
+}
+function library(){
+  const filt=W.filter(x=>{if(libQ&&!(x.w.includes(libQ)||x.d.toLowerCase().includes(libQ)))return false;
+    const st=status(x.w)[0];if(libF==="all")return true;if(libF[0]==="l"&&libF[1]==="v")return lvOf(x)===Number(libF.slice(2));if(libF==="learned")return st==="learned"||st==="mastered";return st===libF});
+  const F=[["all","All"],["new","New"],["learning","Learning"],["tricky","Tricky"],["learned","Learned"],["lv2","Intermediate"],["lv3","Difficult"]];
+  return`<div class="sectionhead"><h2>Word library</h2><span class="muted small">${W.length} words · ${Object.keys(state.words).length} met so far · ${unseenCount()} still to come</span></div>
+  <input class="search" id="libSearch" type="search" placeholder="Search a word or meaning" value="${esc(libQ)}" aria-label="Search words">
+  <div class="filters">${F.map(([k,l])=>`<button data-act="filter" data-f="${k}" aria-pressed="${libF===k}">${l}</button>`).join("")}</div>
+  <div class="lib">${filt.length?filt.slice(0,libShow).map(x=>{const[st,lab]=status(x.w),s=state.words[x.w],open=libOpen===x.w;
+    return`<div class="entry"><button data-act="open" data-w="${x.w}" aria-expanded="${open}"><span class="ew">${x.w}</span><span class="ed">${esc(x.d)}</span>${lvOf(x)>1?`<span class="lvtag lv${lvOf(x)}">${LVL[lvOf(x)]}</span>`:""}<span class="status st-${st}">${lab}</span></button>
+    ${open?`<div class="more">${wordDetail(x)}${s?`<div class="row small muted"><span class="boxes" title="Memory box ${s.box} of 5">${[1,2,3,4,5].map(i=>`<i class="${s.box>=i?"on":""}"></i>`).join("")}</span>
+      <span>Right ${s.right} · Wrong ${s.wrong} · Next review ${s.due<=today()?"today":s.due===addDays(today(),1)?"tomorrow":"in "+Math.round((new Date(s.due)-new Date(today()))/864e5)+" days"}</span></div>`:`<p class="muted small" style="margin:0">Coming up in a future quest.</p>`}</div>`:""}</div>`}).join(""):`<p class="muted">No words match. Try another search.</p>`}</div>
+  ${filt.length>libShow?`<button class="btn ghost" data-act="more" style="align-self:center">Show more (${filt.length-libShow} more)</button>`:filt.length?`<p class="muted small" style="text-align:center;margin:0">Showing all ${filt.length} words</p>`:""}`;
+}
+function progress(){
+  const lv=levelInfo(state.points),t=totals(),T=today();
+  const rv=Object.entries(state.words).filter(([w,s])=>s.due<=T).sort((a,b)=>a[1].box-b[1].box);
+  const r=34,C=2*Math.PI*r;
+  return`<section class="card level"><svg class="ring" viewBox="0 0 84 84" width="84" height="84" aria-hidden="true"><circle cx="42" cy="42" r="${r}" fill="none" stroke="var(--sunk)" stroke-width="9"/>
+    <circle cx="42" cy="42" r="${r}" fill="none" stroke="var(--gold)" stroke-width="9" stroke-linecap="round" stroke-dasharray="${C*lv.pct/100} ${C}" transform="rotate(-90 42 42)"/>
+    <text x="42" y="50" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="24" fill="var(--ink)">${lv.n}</text></svg>
+    <div style="flex:1;min-width:0"><span class="muted small" style="font-weight:800;text-transform:uppercase;letter-spacing:1px">Level ${lv.n}</span><h2>${lv.name}</h2>
+    <div class="bar"><em style="width:${lv.pct}%"></em></div><p class="muted small" style="margin:6px 0 0">${state.points} points · ${lv.next?`${lv.toGo} more to become ${lv.next[1]}`:"You've reached the top level"}</p></div></section>
+  <div class="stats">
+    <div class="stat"><b>${countLearned()}</b><span>words learned</span></div>
+    <div class="stat"><b>${t.acc}%</b><span>accuracy (${t.q} Qs)</span></div>
+    <div class="stat"><b>${curStreak()}</b><span>day streak</span></div>
+    <div class="stat"><b>${state.bestStreak}</b><span>best streak</span></div>
+  </div>
+  <section class="card"><div class="sectionhead"><h2>Badges</h2><span class="muted small">${Object.keys(state.badges).length} of ${BADGES.length} earned</span></div>
+    <div class="badges" style="margin-top:14px">${BADGES.map(b=>{const on=!!state.badges[b.id];return`<div class="badge ${on?"":"locked"}">${medal(b,on)}<b>${b.name}</b><span>${b.desc}</span></div>`}).join("")}</div></section>
+  <section class="card"><div class="sectionhead"><h2>Ready to revise</h2><span class="muted small">Words come back until you remember them</span></div>
+    ${rv.length?`<ul class="list" style="margin-top:10px">${rv.slice(0,8).map(([w,s])=>`<li>${w}<span>${s.wrong>s.right?"tricky word":"box "+s.box+" of 5"}</span></li>`).join("")}</ul>
+    <button class="btn primary" style="margin-top:12px" data-act="start" data-mode="${state.quest.done?"bonus":"daily"}">${state.quest.done?"Practise these now":"Revise them in today's quest"}</button>`:`<p class="muted" style="margin:10px 0 0">Nothing due right now. Great memory!</p>`}</section>`;
+}
+function parent(){
+  const T=today(),days=Array.from({length:7},(_,i)=>addDays(T,i-6)),recs=days.map(d=>state.days[d]||{q:0,c:0,neu:0,rev:0,quest:false});
+  const q=recs.reduce((a,r)=>a+r.q,0),c=recs.reduce((a,r)=>a+r.c,0),acc=q?Math.round(c/q*100):0,active=recs.filter(r=>r.q>0).length,neu=recs.reduce((a,r)=>a+r.neu,0),rev=recs.reduce((a,r)=>a+r.rev,0);
+  const tricky=Object.entries(state.words).filter(([w,s])=>s.wrong>0).sort((a,b)=>b[1].wrong-a[1].wrong||a[1].box-b[1].box).slice(0,5);
+  const max=Math.max(10,...recs.map(r=>r.q)),H=150,top=24,bw=44,gap=(560-7*bw)/8;
+  const ticks=[0,Math.round(max/2),max];
+  const bars=recs.map((r,i)=>{const x=gap+i*(bw+gap),h=r.q/max*H,y=top+H-h,acc=r.q?Math.round(r.c/r.q*100):null;
+    return`<rect class="b ${r.quest?"":"soft"}" x="${x}" y="${y}" width="${bw}" height="${Math.max(h,r.q?3:0)}" rx="6"/>
+    ${r.q?`<text class="val" x="${x+bw/2}" y="${y-7}" text-anchor="middle">${r.q}</text>`:""}
+    <text x="${x+bw/2}" y="${top+H+20}" text-anchor="middle">${days[i]===T?"Today":dayName(days[i])}</text>
+    <text x="${x+bw/2}" y="${top+H+38}" text-anchor="middle" font-size="12">${acc===null?"–":acc+"%"}</text>`}).join("");
+  const grid=ticks.map(t=>{const y=top+H-t/max*H;return`<line class="grid" x1="0" x2="560" y1="${y}" y2="${y}"/>`}).join("");
+  return`<div class="sectionhead"><h2>Weekly summary</h2><span class="muted small">Last 7 days</span></div>
+  <section class="card"><p class="summary"><b>${esc(state.name)}</b> practised on <b>${active} of the last 7 days</b>, answering ${q} questions with <b>${acc}% accuracy</b>. ${neu} new words were introduced and ${rev} revision questions completed. ${countLearned()} words learned in total.</p></section>
+  <div class="stats"><div class="stat"><b>${active}/7</b><span>days practised</span></div><div class="stat"><b>${q}</b><span>questions</span></div><div class="stat"><b>${acc}%</b><span>accuracy</span></div><div class="stat"><b>${neu}</b><span>new words</span></div></div>
+  <section class="card"><div class="sectionhead"><h2>Questions per day</h2><span class="muted small">Dark bars: quest finished · percentages show accuracy</span></div>
+    <div style="overflow-x:auto;margin-top:12px"><svg class="chart" viewBox="0 0 560 220" role="img" aria-label="Questions answered each day this week">${grid}${bars}</svg></div></section>
+  <section class="card"><div class="sectionhead"><h2>Words to practise together</h2><span class="muted small">Most often answered wrongly</span></div>
+    ${tricky.length?`<ul class="list" style="margin-top:10px">${tricky.map(([w,s])=>`<li><span style="color:var(--ink);font-weight:800;text-align:left">${w} <span class="muted" style="font-weight:600">· ${esc(BYW[w].d)}</span></span><span>${s.wrong} wrong · ${s.right} right</span></li>`).join("")}</ul>
+    <p class="muted small" style="margin:10px 0 0">Try using these words at dinner or in the car. Hearing them in real conversation helps them stick.</p>`:`<p class="muted" style="margin:10px 0 0">No tricky words yet.</p>`}</section>
+  <section class="card" style="display:flex;flex-direction:column;gap:14px"><h2 style="font-size:1.2rem">Settings</h2>
+    <div style="display:flex;flex-direction:column;gap:8px"><b>Word difficulty</b>
+      <div class="levelpick">${[["mixed","Mixed"],["1","Core"],["2","Intermediate"],["3","Difficult"]].map(([k,l])=>`<button data-act="level" data-l="${k}" aria-pressed="${state.level===k}">${l}</button>`).join("")}</div>
+      <span class="muted small">${state.level==="mixed"?"Each quest mixes about half core, a third intermediate and a fifth difficult words.":"Quests use "+LVL[state.level].toLowerCase()+" words first, then others when those run out."} ${["1","2","3"].map(l=>W.filter(x=>lvOf(x)===Number(l)&&!state.words[x.w]).length+" "+LVL[l].toLowerCase()).join(" · ")} still to come.</span></div>
+    <label class="field" for="childName">Child's name<input id="childName" type="text" maxlength="24" value="${esc(state.name)}"></label>
+    <div style="display:flex;flex-direction:column;gap:4px"><b>Word supply</b><span class="muted small">${W.length} words in the library · ${unseenCount()} new words still to come. Words never repeat as new words.</span></div>
+    <p class="muted small" style="margin:0">Progress is saved in this browser only.</p>
+    ${confirmReset?`<div class="confirm"><b>Clear all progress on this device?</b><span class="small">Words, points, badges and streaks will start again from zero.</span>
+      <div class="row"><button class="btn danger" data-act="reset-yes">Yes, start fresh</button><button class="btn ghost" data-act="reset-no">Cancel</button></div></div>`
+      :`<div class="row"><button class="btn ghost" data-act="reset">Start fresh</button></div>`}
+  </section>`;
+}
+function render(){
+  const m=document.getElementById("main");
+  m.innerHTML=view==="quest"?quest():view==="library"?library():view==="progress"?progress():view==="parent"?parent():home();
+  renderChips();
+  if(view==="quest"&&run.ans){const b=document.getElementById("contBtn");if(b)b.focus({preventScroll:true})}
+}
+
+const gen="off",lastAdded=0;
+const unseenCount=()=>W.filter(x=>!state.words[x.w]).length;
+function topUp(){}
+
+/* ---------- events ---------- */
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-act]");if(!t)return;const a=t.dataset.act;
+  if(a==="tab"){view=t.dataset.v;run=view==="quest"?run:null;confirmReset=false;render();window.scrollTo(0,0)}
+  else if(a==="start")startRun(t.dataset.mode);
+  else if(a==="speak")speak(t.dataset.w);
+  else if(a==="next"){if(run.i<run.nw.length-1)run.i++;else{run.phase="quiz";run.qi=0;
+      if(run.mode==="daily"&&!state.quest.started){dayRec(today()).neu+=run.nw.length;state.quest.started=true;save()}}render();window.scrollTo(0,0)}
+  else if(a==="prev"){run.i=Math.max(0,run.i-1);render()}
+  else if(a==="answer"){if(run.ans)return;const list=run.phase==="quiz"?run.qs:run.rqs,q=list[run.qi],ok=t.dataset.o===q.ans;
+      run.ans={pick:t.dataset.o,ok};run.total++;if(ok)run.correct++;record(q.w,ok,today(),run.phase==="review");save();render()}
+  else if(a==="cont"){advance();render();window.scrollTo(0,0)}
+  else if(a==="quit"){run=null;view="home";render()}
+  else if(a==="filter"){libF=t.dataset.f;libShow=60;render()}
+  else if(a==="more"){libShow+=60;render()}
+  else if(a==="open"){libOpen=libOpen===t.dataset.w?null:t.dataset.w;render()}
+  else if(a==="level"){state.level=t.dataset.l;if(state.quest&&!state.quest.started&&!state.quest.done){state.quest=null;ensureQuest()}save();render()}
+  else if(a==="reset"){confirmReset=true;render()}
+  else if(a==="reset-no"){confirmReset=false;render()}
+  else if(a==="reset-yes"){const n=state.name==="Ava"&&state.demo?"Explorer":state.name,ex=state.extra;state=blank();state.name=n;state.extra=ex;rebuildWords();ensureQuest();save();confirmReset=false;view="home";render()}
+  else if(a==="demo"){const ex=state.extra;seed();state.extra=ex;rebuildWords();ensureQuest();save();render()}
+});
+document.addEventListener("input",e=>{
+  if(e.target.id==="libSearch"){libQ=e.target.value.trim().toLowerCase();libShow=60;const pos=e.target.selectionStart;render();const s=document.getElementById("libSearch");s.focus();try{s.setSelectionRange(pos,pos)}catch(_){}}
+  if(e.target.id==="childName"){state.name=e.target.value.trim()||"Explorer";state.demo=false;save();renderChips()}
+});
+if(window.VQ_BOOT)VQ_BOOT();else{save();render();}
+if("serviceWorker" in navigator)addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{})});
+</script>
+</body>
+</html>
